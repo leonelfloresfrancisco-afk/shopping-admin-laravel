@@ -22,3 +22,17 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Private certificates
+/storage/certs/*.pem
+
+# Database exports
+*.sql
+
+# Local backups
+*.backup
+*.backup-*
