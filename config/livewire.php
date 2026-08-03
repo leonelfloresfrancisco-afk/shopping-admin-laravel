@@ -6,7 +6,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Configuración Livewire
+    | Livewire Settings
     |--------------------------------------------------------------------------
     */
 
@@ -16,19 +16,41 @@ return [
 
     'layout' => 'components.layouts.app',
 
+
     /*
     |--------------------------------------------------------------------------
-    | Subida temporal de archivos
+    | Temporary File Uploads
     |--------------------------------------------------------------------------
     |
-    | Esta configuración controla la primera subida que hace Livewire
-    | antes de guardar en Cloudinary.
+    | Configuración de archivos temporales usados por wire:model.
+    | Después de esta etapa el archivo será enviado a Cloudinary.
     |
     */
 
     'temporary_file_upload' => [
 
+        /*
+        |--------------------------------------------------------------------------
+        | Disco temporal
+        |--------------------------------------------------------------------------
+        |
+        | Render permite escritura temporal dentro del contenedor.
+        | Usamos local para evitar problemas con storage público.
+        |
+        */
+
         'disk' => 'local',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validación temporal
+        |--------------------------------------------------------------------------
+        |
+        | 10240 KB = 10 MB.
+        | El formulario del producto mantiene su propio límite de 3 MB.
+        |
+        */
 
         'rules' => [
             'required',
@@ -36,27 +58,61 @@ return [
             'max:10240',
         ],
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Carpeta temporal
+        |--------------------------------------------------------------------------
+        */
+
         'directory' => 'livewire-tmp',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Middleware
+        |--------------------------------------------------------------------------
+        |
+        | Evita bloqueos adicionales durante la subida temporal.
+        |
+        */
 
         'middleware' => null,
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tipos permitidos para vista previa
+        |--------------------------------------------------------------------------
+        */
+
         'preview_mimes' => [
             'png',
-            'gif',
-            'bmp',
-            'svg',
-            'wav',
-            'mp4',
-            'mov',
-            'avi',
-            'webm',
             'jpg',
             'jpeg',
             'webp',
+            'gif',
+            'svg',
         ],
 
-        'max_upload_time' => 5,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tiempo máximo de subida
+        |--------------------------------------------------------------------------
+        */
+
+        'max_upload_time' => 10,
 
     ],
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pagination Theme
+    |--------------------------------------------------------------------------
+    */
+
+    'pagination_theme' => 'tailwind',
 
 ];
