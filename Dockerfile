@@ -43,6 +43,7 @@ FROM php:8.4-apache
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+ENV PORT=10000
 
 WORKDIR /var/www/html
 
@@ -79,11 +80,17 @@ COPY . .
 COPY --from=php_dependencies /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 
-RUN php artisan package:discover --ansi \
+RUN php artisan package:discover --ansi
+
+# Render monta los archivos secretos con acceso para el grupo 1000.
+# Se crea el grupo si todavía no existe y se añade www-data.
+RUN if ! getent group 1000 > /dev/null; then \
+        groupadd --gid 1000 render-secrets; \
+    fi \
+    && RENDER_SECRET_GROUP="$(getent group 1000 | cut -d: -f1)" \
+    && usermod --append --groups "$RENDER_SECRET_GROUP" www-data \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
-
-ENV PORT=10000
 
 EXPOSE 10000
 
