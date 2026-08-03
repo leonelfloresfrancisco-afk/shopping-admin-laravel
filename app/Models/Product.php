@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\HasPublicImageUrl;
 
 class Product extends Model
 {
     use HasFactory;
+    use HasPublicImageUrl;
 
     /**
      * Campos permitidos para asignación masiva.
