@@ -28,6 +28,7 @@ Route::livewire(
     'store.product-show'
 )->name('store.product.show');
 
+
 /*
 |--------------------------------------------------------------------------
 | Panel administrativo
@@ -39,6 +40,7 @@ Route::middleware([
     'verified',
     EnsureUserIsActive::class,
 ])->group(function (): void {
+
     /*
     |--------------------------------------------------------------------------
     | Dashboard
@@ -48,16 +50,17 @@ Route::middleware([
     Route::livewire('/dashboard', 'dashboard.index')
         ->name('dashboard');
 
+
     /*
     |--------------------------------------------------------------------------
     | Productos
     |--------------------------------------------------------------------------
-    | Administrador, gestor y operador.
     */
 
     Route::middleware(
         EnsureUserHasRole::class . ':admin,manager,operator'
     )->group(function (): void {
+
         Route::livewire('/products', 'products.index')
             ->name('products.index');
 
@@ -66,18 +69,21 @@ Route::middleware([
 
         Route::livewire('/products/{product}/edit', 'products.edit')
             ->name('products.edit');
+
     });
+
 
     /*
     |--------------------------------------------------------------------------
     | Catálogos y contenido
     |--------------------------------------------------------------------------
-    | Administrador y gestor.
     */
 
     Route::middleware(
         EnsureUserHasRole::class . ':admin,manager'
     )->group(function (): void {
+
+
         /*
         |--------------------------------------------------------------------------
         | Categorías
@@ -93,6 +99,7 @@ Route::middleware([
         Route::livewire('/categories/{category}/edit', 'categories.edit')
             ->name('categories.edit');
 
+
         /*
         |--------------------------------------------------------------------------
         | Marcas
@@ -107,6 +114,7 @@ Route::middleware([
 
         Route::livewire('/brands/{brand}/edit', 'brands.edit')
             ->name('brands.edit');
+
 
         /*
         |--------------------------------------------------------------------------
@@ -125,6 +133,7 @@ Route::middleware([
             'carousel.edit'
         )->name('carousel.edit');
 
+
         /*
         |--------------------------------------------------------------------------
         | Promociones
@@ -141,18 +150,21 @@ Route::middleware([
             '/promotions/{promotion}/edit',
             'promotions.edit'
         )->name('promotions.edit');
+
     });
+
 
     /*
     |--------------------------------------------------------------------------
     | Administración
     |--------------------------------------------------------------------------
-    | Solo administradores.
     */
 
     Route::middleware(
         EnsureUserHasRole::class . ':admin'
     )->group(function (): void {
+
+
         /*
         |--------------------------------------------------------------------------
         | Empresa
@@ -161,6 +173,7 @@ Route::middleware([
 
         Route::livewire('/company', 'company.edit')
             ->name('company.edit');
+
 
         /*
         |--------------------------------------------------------------------------
@@ -176,8 +189,64 @@ Route::middleware([
 
         Route::livewire('/users/{user}/edit', 'users.edit')
             ->name('users.edit');
+
     });
+
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| Diagnóstico temporal de subida de archivos
+|--------------------------------------------------------------------------
+|
+| Esta ruta es solo para comprobar la configuración real de PHP en Render.
+| Después de solucionar el problema debe eliminarse.
+|
+*/
+
+Route::get('/diagnostics/php-upload-limits', function (): array {
+
+    return [
+
+        'upload_max_filesize' => ini_get(
+            'upload_max_filesize'
+        ),
+
+        'post_max_size' => ini_get(
+            'post_max_size'
+        ),
+
+        'memory_limit' => ini_get(
+            'memory_limit'
+        ),
+
+        'max_file_uploads' => ini_get(
+            'max_file_uploads'
+        ),
+
+        'max_execution_time' => ini_get(
+            'max_execution_time'
+        ),
+
+        'max_input_time' => ini_get(
+            'max_input_time'
+        ),
+
+        'temporary_directory' => sys_get_temp_dir(),
+
+        'temporary_directory_exists' => is_dir(
+            sys_get_temp_dir()
+        ),
+
+        'temporary_directory_writable' => is_writable(
+            sys_get_temp_dir()
+        ),
+
+    ];
+
+});
+
 
 /*
 |--------------------------------------------------------------------------
