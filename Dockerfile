@@ -80,7 +80,8 @@ COPY . .
 COPY --from=php_dependencies /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 
-RUN php artisan package:discover --ansi
+RUN php artisan package:discover --ansi \
+    && php artisan storage:link || true
 
 # Render monta los archivos secretos con acceso para el grupo 1000.
 # Se crea el grupo si todavía no existe y se añade www-data.
