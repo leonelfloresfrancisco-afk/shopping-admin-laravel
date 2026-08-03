@@ -47,6 +47,9 @@ ENV PORT=10000
 
 WORKDIR /var/www/html
 
+# Configuración PHP específica para Render.
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
