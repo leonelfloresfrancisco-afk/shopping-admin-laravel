@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesPublicAssetUrl;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 class CarouselSlide extends Model
 {
     use HasFactory;
+    use ResolvesPublicAssetUrl;
 
     /**
-     * Campos permitidos para asignación masiva.
+     * Campos permitidos para asignaciÃ³n masiva.
      *
      * @var array<int, string>
      */
@@ -31,7 +33,7 @@ class CarouselSlide extends Model
     ];
 
     /**
-     * Conversión automática de tipos.
+     * ConversiÃ³n automÃ¡tica de tipos.
      *
      * @return array<string, string>
      */
@@ -85,4 +87,29 @@ class CarouselSlide extends Model
             get: fn (): bool => $this->status === 'visible'
         );
     }
-}
+
+    /**
+     * URL pública de la imagen de escritorio.
+     */
+    protected function desktopImageUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (): ?string =>
+                $this->resolvePublicAssetUrl(
+                    $this->attributes['desktop_image'] ?? null
+                )
+        );
+    }
+
+    /**
+     * URL pública de la imagen móvil.
+     */
+    protected function mobileImageUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (): ?string =>
+                $this->resolvePublicAssetUrl(
+                    $this->attributes['mobile_image'] ?? null
+                )
+        );
+    }}

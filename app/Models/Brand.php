@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesPublicAssetUrl;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Brand extends Model
 {
     use HasFactory;
+    use ResolvesPublicAssetUrl;
 
     /**
-     * Campos permitidos para asignación masiva.
+     * Campos permitidos para asignaciÃ³n masiva.
      *
      * @var array<int, string>
      */
@@ -26,7 +28,7 @@ class Brand extends Model
     ];
 
     /**
-     * Conversiones automáticas de tipos.
+     * Conversiones automÃ¡ticas de tipos.
      *
      * @return array<string, string>
      */
@@ -45,4 +47,16 @@ class Brand extends Model
     {
         return $this->hasMany(Product::class);
     }
-}
+
+    /**
+     * URL pública del logotipo.
+     */
+    protected function logoUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (): ?string =>
+                $this->resolvePublicAssetUrl(
+                    $this->attributes['logo'] ?? null
+                )
+        );
+    }}

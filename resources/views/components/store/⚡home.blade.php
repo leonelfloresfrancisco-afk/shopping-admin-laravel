@@ -192,7 +192,7 @@ class extends Component
 
         $currencySymbol = match ($company->currency_code) {
             'USD' => '$',
-            'EUR' => '€',
+            'EUR' => 'â‚¬',
             default => 'S/',
         };
 
@@ -261,7 +261,7 @@ class extends Component
                 <p
                     class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-300"
                 >
-                    {{ $company->maintenance_message ?: 'Nuestra tienda estará disponible nuevamente muy pronto.' }}
+                    {{ $company->maintenance_message ?: 'Nuestra tienda estarÃ¡ disponible nuevamente muy pronto.' }}
                 </p>
             </div>
         </section>
@@ -305,12 +305,12 @@ class extends Component
                                 @if ($slide->mobile_image)
                                     <source
                                         media="(max-width: 767px)"
-                                        srcset="{{ asset('storage/' . $slide->mobile_image) }}"
+                                        srcset="{{ $slide->mobile_image_url }}"
                                     >
                                 @endif
 
                                 <img
-                                    src="{{ asset('storage/' . $slide->desktop_image) }}"
+                                    src="{{ $slide->desktop_image_url }}"
                                     alt="{{ $slide->title }}"
                                     class="absolute inset-0 h-full w-full object-cover"
                                 >
@@ -365,7 +365,7 @@ class extends Component
                                             >
                                                 {{ $slide->button_text }}
 
-                                                <span>→</span>
+                                                <span>â†’</span>
                                             </a>
                                         @endif
 
@@ -384,7 +384,7 @@ class extends Component
                                     <p
                                         class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300"
                                     >
-                                        Catálogo actualizado
+                                        CatÃ¡logo actualizado
                                     </p>
 
                                     <div class="mt-5 grid grid-cols-2 gap-4">
@@ -428,7 +428,7 @@ class extends Component
                             class="absolute left-4 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-950 shadow-xl transition hover:bg-white sm:flex"
                             aria-label="Banner anterior"
                         >
-                            <span class="text-xl">‹</span>
+                            <span class="text-xl">â€¹</span>
                         </button>
 
                         <button
@@ -437,7 +437,7 @@ class extends Component
                             class="absolute right-4 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-950 shadow-xl transition hover:bg-white sm:flex"
                             aria-label="Siguiente banner"
                         >
-                            <span class="text-xl">›</span>
+                            <span class="text-xl">â€º</span>
                         </button>
 
                         <div
@@ -493,7 +493,7 @@ class extends Component
                             href="#productos"
                             class="mt-9 inline-flex h-13 items-center justify-center rounded-2xl bg-emerald-700 px-7 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-800"
                         >
-                            Explorar catálogo
+                            Explorar catÃ¡logo
                         </a>
                     </div>
 
@@ -508,7 +508,7 @@ class extends Component
                                 class="store-image-zoom-wrapper relative block w-full max-w-lg overflow-hidden rounded-[2.25rem] border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur"
                             >
                                 <img
-                                    src="{{ asset('storage/' . $heroProduct->image) }}"
+                                    src="{{ $heroProduct->image_url }}"
                                     alt="{{ $heroProduct->name }}"
                                     class="store-image-zoom aspect-square w-full rounded-3xl object-cover"
                                 >
@@ -559,7 +559,7 @@ class extends Component
 
                 <div class="bg-white px-4 py-5 text-center">
                     <p class="font-semibold text-zinc-900">
-                        Atención directa
+                        AtenciÃ³n directa
                     </p>
 
                     <p class="mt-1 text-xs text-zinc-500">
@@ -569,7 +569,7 @@ class extends Component
             </div>
         </section>
 
-        {{-- Categorías profesionales --}}
+        {{-- CategorÃ­as profesionales --}}
         <section
             id="categorias"
             class="overflow-hidden bg-white py-18 sm:py-24"
@@ -680,7 +680,7 @@ class extends Component
                         </h2>
 
                         <p class="mt-4 max-w-2xl text-base leading-7 text-zinc-600">
-                            Explora todas las categorías con el dedo, la rueda del mouse, arrastrando o usando las flechas.
+                            Explora todas las categorÃ­as con el dedo, la rueda del mouse, arrastrando o usando las flechas.
                         </p>
                     </div>
 
@@ -689,7 +689,7 @@ class extends Component
                             href="#productos"
                             class="inline-flex items-center gap-2 font-semibold text-emerald-700 transition hover:gap-3"
                         >
-                            Ver catálogo completo
+                            Ver catÃ¡logo completo
 
                             <svg
                                 class="h-4 w-4"
@@ -713,7 +713,7 @@ class extends Component
                                     type="button"
                                     x-on:click="scrollCategories(-360)"
                                     class="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:border-emerald-600 hover:text-emerald-700"
-                                    aria-label="Ver categorías anteriores"
+                                    aria-label="Ver categorÃ­as anteriores"
                                 >
                                     <svg
                                         class="h-5 w-5"
@@ -735,7 +735,7 @@ class extends Component
                                     type="button"
                                     x-on:click="scrollCategories(360)"
                                     class="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:border-emerald-600 hover:text-emerald-700"
-                                    aria-label="Ver más categorías"
+                                    aria-label="Ver mÃ¡s categorÃ­as"
                                 >
                                     <svg
                                         class="h-5 w-5"
@@ -803,14 +803,14 @@ class extends Component
                                 }
                             "
                             class="store-reveal {{ $categoryDelay }} group relative w-[82vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-950 text-left shadow-sm transition duration-500 hover:-translate-y-1.5 hover:border-emerald-500 hover:shadow-2xl sm:w-[300px] lg:w-[320px] xl:w-[340px]"
-                            aria-label="Explorar la categoría {{ $category->name }}"
+                            aria-label="Explorar la categorÃ­a {{ $category->name }}"
                         >
                             <div class="relative aspect-[4/3] overflow-hidden">
 
                                 @if ($category->image)
 
                                     <img
-                                        src="{{ asset('storage/' . $category->image) }}"
+                                        src="{{ $category->image_url }}"
                                         alt="{{ $category->name }}"
                                         class="pointer-events-none h-full w-full select-none object-cover transition duration-700 ease-out group-hover:scale-110"
                                         loading="lazy"
@@ -907,11 +907,11 @@ class extends Component
                         <div class="w-full rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center">
 
                             <p class="font-semibold text-zinc-700">
-                                Todavía no hay categorías disponibles.
+                                TodavÃ­a no hay categorÃ­as disponibles.
                             </p>
 
                             <p class="mt-2 text-sm text-zinc-500">
-                                Las categorías activas aparecerán automáticamente en esta sección.
+                                Las categorÃ­as activas aparecerÃ¡n automÃ¡ticamente en esta secciÃ³n.
                             </p>
 
                         </div>
@@ -959,7 +959,7 @@ class extends Component
 
                         <div>
                             <p class="text-sm font-bold uppercase tracking-[0.2em] text-emerald-400">
-                                Selección especial
+                                SelecciÃ³n especial
                             </p>
 
                             <h2 class="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
@@ -976,7 +976,7 @@ class extends Component
                                 href="#productos"
                                 class="inline-flex items-center gap-2 font-semibold text-emerald-400 transition hover:gap-3"
                             >
-                                Ver catálogo
+                                Ver catÃ¡logo
 
                                 <svg
                                     class="h-4 w-4"
@@ -1022,7 +1022,7 @@ class extends Component
                                         type="button"
                                         x-on:click="$refs.featuredTrack.scrollBy({ left: 340, behavior: 'smooth' })"
                                         class="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-white shadow-sm transition hover:border-emerald-500 hover:text-emerald-400"
-                                        aria-label="Ver más productos"
+                                        aria-label="Ver mÃ¡s productos"
                                     >
                                         <svg
                                             class="h-5 w-5"
@@ -1064,7 +1064,7 @@ class extends Component
                                     @if ($product->image)
 
                                         <img
-                                            src="{{ asset('storage/' . $product->image) }}"
+                                            src="{{ $product->image_url }}"
                                             alt="{{ $product->name }}"
                                             class="store-product-image h-full w-full object-contain p-4 sm:p-5"
                                             loading="lazy"
@@ -1223,7 +1223,7 @@ class extends Component
             </section>
         @endif
 
-        {{-- Catálogo --}}
+        {{-- CatÃ¡logo --}}
         <section
             id="productos"
             class="bg-zinc-50 py-18 sm:py-24"
@@ -1235,7 +1235,7 @@ class extends Component
                     <p
                         class="text-sm font-bold uppercase tracking-[0.2em] text-emerald-700"
                     >
-                        Catálogo
+                        CatÃ¡logo
                     </p>
 
                     <div
@@ -1248,14 +1248,14 @@ class extends Component
                                 @if ($selectedCategory)
                                     {{ $selectedCategory->name }}
                                 @elseif ($search !== '')
-                                    Resultados de búsqueda
+                                    Resultados de bÃºsqueda
                                 @else
                                     Todos los productos
                                 @endif
                             </h2>
 
                             <p class="mt-4 max-w-2xl text-zinc-600">
-                                Consulta características, precio, marca y disponibilidad.
+                                Consulta caracterÃ­sticas, precio, marca y disponibilidad.
                             </p>
                         </div>
 
@@ -1302,7 +1302,7 @@ class extends Component
                         <input
                             type="search"
                             wire:model.live.debounce.400ms="search"
-                            placeholder="Buscar producto, marca, categoría o SKU..."
+                            placeholder="Buscar producto, marca, categorÃ­a o SKU..."
                             class="h-13 w-full rounded-2xl border border-zinc-300 bg-white pl-12 pr-4 text-zinc-950 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
                         >
                     </div>
@@ -1312,7 +1312,7 @@ class extends Component
                         class="h-13 w-full rounded-2xl border border-zinc-300 bg-white px-4 text-zinc-950 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
                     >
                         <option value="">
-                            Todas las categorías
+                            Todas las categorÃ­as
                         </option>
 
                         @foreach ($categories as $category)
@@ -1340,7 +1340,7 @@ class extends Component
                             >
                                 @if ($product->image)
                                     <img
-                                        src="{{ asset('storage/' . $product->image) }}"
+                                        src="{{ $product->image_url }}"
                                         alt="{{ $product->name }}"
                                         class="store-product-image h-full w-full object-cover"
                                         loading="lazy"
@@ -1445,7 +1445,7 @@ class extends Component
                                     <span
                                         class="text-lg text-emerald-700 transition-transform group-hover:translate-x-1"
                                     >
-                                        →
+                                        â†’
                                     </span>
                                 </div>
                             </div>
@@ -1459,7 +1459,7 @@ class extends Component
                             </p>
 
                             <p class="mt-2 text-sm text-zinc-500">
-                                Cambia la búsqueda o elimina los filtros.
+                                Cambia la bÃºsqueda o elimina los filtros.
                             </p>
 
                             <button
@@ -1546,7 +1546,7 @@ class extends Component
                                             <p
                                                 class="text-[11px] uppercase tracking-[0.16em] text-zinc-500"
                                             >
-                                                Código
+                                                CÃ³digo
                                             </p>
 
                                             <p
@@ -1559,7 +1559,7 @@ class extends Component
                                         <p
                                             class="text-sm font-medium text-emerald-300"
                                         >
-                                            Aplicación automática
+                                            AplicaciÃ³n automÃ¡tica
                                         </p>
                                     @endif
                                 </div>
@@ -1578,7 +1578,7 @@ class extends Component
             </div>
         </section>
 
-        {{-- Estadísticas --}}
+        {{-- EstadÃ­sticas --}}
         <section
             class="relative overflow-hidden bg-zinc-950 py-14 text-white"
         >
@@ -1606,7 +1606,7 @@ class extends Component
                     </p>
 
                     <p class="mt-2 text-sm text-zinc-400">
-                        Categorías
+                        CategorÃ­as
                     </p>
                 </div>
 
@@ -1670,7 +1670,7 @@ class extends Component
                         >
                             @if ($brand->logo)
                                 <img
-                                    src="{{ asset('storage/' . $brand->logo) }}"
+                                    src="{{ $brand->logo_url }}"
                                     alt="{{ $brand->name }}"
                                     class="h-16 w-full object-contain transition duration-500 group-hover:scale-105"
                                     loading="lazy"
@@ -1733,7 +1733,7 @@ class extends Component
                         <p
                             class="mt-5 text-base leading-8 text-zinc-600"
                         >
-                            Cada producto contiene precio, stock, marca, categoría y contacto directo para ayudarte a decidir.
+                            Cada producto contiene precio, stock, marca, categorÃ­a y contacto directo para ayudarte a decidir.
                         </p>
 
                         <a
@@ -1751,11 +1751,11 @@ class extends Component
                             <div
                                 class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-xl text-emerald-800"
                             >
-                                ✓
+                                âœ“
                             </div>
 
                             <h3 class="mt-5 font-bold text-zinc-950">
-                                Información real
+                                InformaciÃ³n real
                             </h3>
 
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
@@ -1769,11 +1769,11 @@ class extends Component
                             <div
                                 class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-xl text-blue-800"
                             >
-                                ↗
+                                â†—
                             </div>
 
                             <h3 class="mt-5 font-bold text-zinc-950">
-                                Atención directa
+                                AtenciÃ³n directa
                             </h3>
 
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
@@ -1795,7 +1795,7 @@ class extends Component
                             </h3>
 
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
-                                Campañas activas y descuentos claramente presentados.
+                                CampaÃ±as activas y descuentos claramente presentados.
                             </p>
                         </div>
 
@@ -1805,11 +1805,11 @@ class extends Component
                             <div
                                 class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-xl text-violet-800"
                             >
-                                ◇
+                                â—‡
                             </div>
 
                             <h3 class="mt-5 font-bold text-zinc-950">
-                                Diseño responsive
+                                DiseÃ±o responsive
                             </h3>
 
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
@@ -1833,7 +1833,7 @@ class extends Component
                 );
 
                 $generalMessage = rawurlencode(
-                    'Hola, deseo recibir información sobre los productos de '
+                    'Hola, deseo recibir informaciÃ³n sobre los productos de '
                     . $company->trade_name
                 );
 
@@ -1857,19 +1857,19 @@ class extends Component
                     <p
                         class="text-sm font-bold uppercase tracking-[0.2em] text-emerald-400"
                     >
-                        Atención personalizada
+                        AtenciÃ³n personalizada
                     </p>
 
                     <h2
                         class="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl"
                     >
-                        ¿Necesitas ayuda para elegir?
+                        Â¿Necesitas ayuda para elegir?
                     </h2>
 
                     <p
                         class="mt-5 max-w-2xl text-lg leading-8 text-zinc-300"
                     >
-                        Escríbenos y recibe información sobre disponibilidad, características y promociones.
+                        EscrÃ­benos y recibe informaciÃ³n sobre disponibilidad, caracterÃ­sticas y promociones.
                     </p>
                 </div>
 
