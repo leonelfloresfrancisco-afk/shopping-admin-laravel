@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
@@ -34,12 +37,15 @@ class Product extends Model
         | Imagen principal
         |--------------------------------------------------------------------------
         |
-        | Este campo se conserva para no romper los productos existentes.
-        | Las fotografías adicionales se guardarán en product_images.
+        | "image" guarda la ruta local anterior o la URL completa de Cloudinary.
+        | "image_public_id" permite eliminar o reemplazar el recurso remoto.
+        | "image_provider" identifica el proveedor utilizado.
         |
         */
 
         'image',
+        'image_public_id',
+        'image_provider',
 
         'is_active',
         'is_featured',
@@ -104,7 +110,7 @@ class Product extends Model
     /**
      * Promociones asignadas directamente al producto.
      */
-    public function promotions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function promotions(): BelongsToMany
     {
         return $this->belongsToMany(
             Promotion::class,
