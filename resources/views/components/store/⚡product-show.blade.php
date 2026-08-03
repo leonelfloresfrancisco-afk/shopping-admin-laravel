@@ -4,6 +4,7 @@ use App\Models\CompanySetting;
 use App\Models\Product;
 use App\Models\Promotion;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -24,6 +25,39 @@ class extends Component
         );
 
         $this->productId = $product->id;
+    }
+
+    /**
+     * Normaliza una URL de imagen para evitar rutas como:
+     * /storage/https://res.cloudinary.com/...
+     */
+    private function normalizeImageUrl(?string $url): ?string
+    {
+        if (! is_string($url) || trim($url) === '') {
+            return null;
+        }
+
+        $url = trim($url);
+
+        if (Str::startsWith($url, ['/storage/http://', '/storage/https://'])) {
+            return Str::after($url, '/storage/');
+        }
+
+        $absoluteStoragePrefix = rtrim(url('/storage'), '/') . '/';
+
+        if (
+            Str::startsWith(
+                $url,
+                [
+                    $absoluteStoragePrefix . 'http://',
+                    $absoluteStoragePrefix . 'https://',
+                ]
+            )
+        ) {
+            return Str::after($url, $absoluteStoragePrefix);
+        }
+
+        return $url;
     }
 
     /**
@@ -64,9 +98,7 @@ class extends Component
             $galleryImages->push([
                 'id' => 'main-' . $product->id,
 
-                'url' => asset(
-                    'storage/' . $product->image
-                ),
+                'url' => $this->normalizeImageUrl($product->image_url),
 
                 'alt' => $product->name,
 
@@ -78,9 +110,7 @@ class extends Component
             $galleryImages->push([
                 'id' => 'gallery-' . $productImage->id,
 
-                'url' => asset(
-                    'storage/' . $productImage->image
-                ),
+                'url' => $this->normalizeImageUrl($productImage->image_url),
 
                 'alt' => $productImage->alt_text
                     ?: $product->name
@@ -92,6 +122,10 @@ class extends Component
         }
 
         $galleryImages = $galleryImages
+            ->filter(
+                fn (array $image): bool =>
+                    filled($image['url'] ?? null)
+            )
             ->unique('url')
             ->values();
 
@@ -346,23 +380,10 @@ class extends Component
                             ) * 100;
                     }
                 }"
-                x-effect="
-                    document.documentElement.style.overflow =
-                        viewerOpen ? 'hidden' : ''
-                "
-                x-on:keydown.escape.window="
-                    viewerOpen = false
-                "
-                x-on:keydown.arrow-right.window="
-                    if (viewerOpen) {
-                        nextImage()
-                    }
-                "
-                x-on:keydown.arrow-left.window="
-                    if (viewerOpen) {
-                        previousImage()
-                    }
-                "
+                x-effect="document.documentElement.style.overflow = viewerOpen ? 'hidden' : ''"
+                x-on:keydown.escape.window="viewerOpen = false"
+                x-on:keydown.arrow-right.window="viewerOpen && nextImage()"
+                x-on:keydown.arrow-left.window="viewerOpen && previousImage()"
                 class="min-w-0"
             >
 
@@ -372,49 +393,26 @@ class extends Component
                     <div
                         class="relative aspect-square overflow-hidden bg-zinc-100"
                         x-on:mousemove="updateZoom($event)"
-                        x-on:mouseenter="
-                            if (
-                                window.matchMedia(
-                                    '(hover: hover)'
-                                ).matches
-                                && images.length > 0
-                            ) {
-                                hoverZoom = true
-                            }
-                        "
-                        x-on:mouseleave="
-                            hoverZoom = false
-                        "
+                        x-on:mouseenter="hoverZoom = window.matchMedia('(hover: hover)').matches && images.length > 0"
+                        x-on:mouseleave="hoverZoom = false"
                     >
 
                         <template x-if="images.length > 0">
 
                             <button
                                 type="button"
-                                x-on:click="
-                                    viewerOpen = true
-                                "
+                                x-on:click="viewerOpen = true"
                                 class="group block h-full w-full cursor-zoom-in overflow-hidden"
                                 aria-label="Ampliar fotografía del producto"
                             >
 
                                 <img
-                                    x-bind:src="images[active].url"
-                                    x-bind:alt="images[active].alt"
-                                    x-bind:style="`
-                                        transform-origin:
-                                            ${zoomX}%
-                                            ${zoomY}%;
-
-                                        transform:
-                                            scale(
-                                                ${
-                                                    hoverZoom
-                                                        ? 2.25
-                                                        : 1
-                                                }
-                                            );
-                                    `"
+                                    x-bind:src="images[active]?.url || ''"
+                                    x-bind:alt="images[active]?.alt || 'Imagen del producto'"
+                                    x-bind:style="{
+                                        transformOrigin: `${zoomX}% ${zoomY}%`,
+                                        transform: `scale(${hoverZoom ? 2.25 : 1})`
+                                    }"
                                     class="h-full w-full object-contain p-5 transition-transform duration-200 ease-out sm:p-8"
                                 >
 
@@ -535,7 +533,7 @@ class extends Component
                             <div class="min-w-0">
 
                                 <p
-                                    x-text="images[active].label"
+                                    x-text="images[active]?.label || 'Vista principal'"
                                     class="truncate text-sm font-semibold text-zinc-900"
                                 ></p>
 
@@ -550,9 +548,7 @@ class extends Component
 
                             <button
                                 type="button"
-                                x-on:click="
-                                    viewerOpen = true
-                                "
+                                x-on:click="viewerOpen = true"
                                 class="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-600 hover:text-emerald-700"
                             >
                                 Ver en grande
@@ -580,9 +576,7 @@ class extends Component
 
                             <button
                                 type="button"
-                                x-on:click="
-                                    selectImage(index)
-                                "
+                                x-on:click="selectImage(index)"
                                 x-bind:class="
                                     active === index
                                         ? 'border-emerald-600 ring-2 ring-emerald-100'
@@ -669,17 +663,13 @@ class extends Component
                     role="dialog"
                     aria-modal="true"
                     aria-label="Galería ampliada del producto"
-                    x-on:click.self="
-                        viewerOpen = false
-                    "
+                    x-on:click.self="viewerOpen = false"
                 >
 
                     {{-- Cerrar --}}
                     <button
                         type="button"
-                        x-on:click="
-                            viewerOpen = false
-                        "
+                        x-on:click="viewerOpen = false"
                         class="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-zinc-950 shadow-xl transition hover:scale-105 sm:right-6 sm:top-6"
                         aria-label="Cerrar visor"
                     >
@@ -705,8 +695,8 @@ class extends Component
                             <template x-if="images.length > 0">
 
                                 <img
-                                    x-bind:src="images[active].url"
-                                    x-bind:alt="images[active].alt"
+                                    x-bind:src="images[active]?.url || ''"
+                                    x-bind:alt="images[active]?.alt || 'Imagen del producto'"
                                     class="max-h-full max-w-full select-none object-contain"
                                 >
 
@@ -1079,7 +1069,7 @@ class extends Component
 
                                 @if ($relatedProduct->image)
                                     <img
-                                        src="{{ asset('storage/' . $relatedProduct->image) }}"
+                                        src="{{ $relatedProduct->image_url }}"
                                         alt="{{ $relatedProduct->name }}"
                                         class="store-product-image h-full w-full object-cover"
                                         loading="lazy"
