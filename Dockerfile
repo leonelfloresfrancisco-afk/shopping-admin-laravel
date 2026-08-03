@@ -1,5 +1,22 @@
 # ============================================================
-# ETAPA 1: COMPILAR CSS Y JAVASCRIPT CON VITE
+# ETAPA 1: DEPENDENCIAS PHP
+# ============================================================
+FROM composer:2 AS php_dependencies
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+
+# ============================================================
+# ETAPA 2: COMPILAR CSS Y JAVASCRIPT
 # ============================================================
 FROM node:22-alpine AS frontend
 
@@ -9,15 +26,17 @@ COPY package.json package-lock.json ./
 
 RUN npm ci
 
-COPY resources ./resources
-COPY public ./public
-COPY vite.config.js ./
+COPY . .
+
+# Vite necesita vendor para localizar archivos de Laravel,
+# Livewire, Flux y otros paquetes durante la compilación.
+COPY --from=php_dependencies /app/vendor ./vendor
 
 RUN npm run build
 
 
 # ============================================================
-# ETAPA 2: APLICACIÓN LARAVEL CON PHP Y APACHE
+# ETAPA 3: APLICACIÓN LARAVEL CON PHP Y APACHE
 # ============================================================
 FROM php:8.4-apache
 
@@ -27,7 +46,6 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 WORKDIR /var/www/html
 
-# Dependencias del sistema y extensiones requeridas por Laravel.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
@@ -56,31 +74,14 @@ RUN apt-get update \
         /etc/apache2/conf-available/*.conf \
     && rm -rf /var/lib/apt/lists/*
 
-# Composer.
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Copiar código del proyecto.
 COPY . .
 
-# Instalar dependencias PHP de producción.
-RUN composer install \
-        --no-dev \
-        --no-interaction \
-        --prefer-dist \
-        --optimize-autoloader \
-        --no-scripts \
-    && php artisan package:discover --ansi
-
-# Copiar los recursos compilados por Vite.
+COPY --from=php_dependencies /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 
-# Permisos necesarios para Laravel.
-RUN chown -R www-data:www-data \
-        storage \
-        bootstrap/cache \
-    && chmod -R 775 \
-        storage \
-        bootstrap/cache
+RUN php artisan package:discover --ansi \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
 
