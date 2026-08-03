@@ -1,10 +1,10 @@
 <?php
 
+use App\Contracts\ImageStorage;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -297,40 +297,57 @@ new class extends Component
 
         /*
         |--------------------------------------------------------------------------
-        | Archivos almacenados durante el proceso
+        | Recursos subidos durante la operación
         |--------------------------------------------------------------------------
         |
-        | En caso de producirse un error, estos archivos se eliminan para
-        | evitar imágenes huérfanas dentro del almacenamiento.
+        | Si la transacción de base de datos falla, se eliminan los recursos
+        | recién subidos para evitar imágenes huérfanas en Cloudinary.
         |
         */
 
-        $storedFiles = [];
+        /** @var ImageStorage $imageStorage */
+        $imageStorage = app(ImageStorage::class);
+
+        /**
+         * @var array<int, array{
+         *     url: string,
+         *     public_id: string|null,
+         *     provider: string,
+         *     width: int|null,
+         *     height: int|null,
+         *     format: string|null
+         * }>
+         */
+        $uploadedResources = [];
 
         $storedGalleryImages = [];
 
         try {
             if ($uploadedMainImage !== null) {
-                $mainImagePath = $uploadedMainImage->store(
-                    'products',
-                    'public'
+                $mainImageUpload = $imageStorage->upload(
+                    $uploadedMainImage,
+                    'wasyntek/products/main'
                 );
 
-                $storedFiles[] = $mainImagePath;
+                $uploadedResources[] = $mainImageUpload;
 
-                $validated['image'] = $mainImagePath;
+                $validated['image'] = $mainImageUpload['url'];
+                $validated['image_public_id'] = $mainImageUpload['public_id'];
+                $validated['image_provider'] = $mainImageUpload['provider'];
             }
 
             foreach ($uploadedGalleryImages as $index => $galleryImage) {
-                $galleryImagePath = $galleryImage->store(
-                    'products/gallery',
-                    'public'
+                $galleryUpload = $imageStorage->upload(
+                    $galleryImage,
+                    'wasyntek/products/gallery'
                 );
 
-                $storedFiles[] = $galleryImagePath;
+                $uploadedResources[] = $galleryUpload;
 
                 $storedGalleryImages[] = [
-                    'image' => $galleryImagePath,
+                    'image' => $galleryUpload['url'],
+                    'image_public_id' => $galleryUpload['public_id'],
+                    'image_provider' => $galleryUpload['provider'],
 
                     'alt_text' => $validated['name']
                         . ' - Vista '
@@ -359,10 +376,15 @@ new class extends Component
                 }
             );
         } catch (\Throwable $exception) {
-            if ($storedFiles !== []) {
-                Storage::disk('public')->delete(
-                    $storedFiles
-                );
+            foreach (array_reverse($uploadedResources) as $uploadedResource) {
+                try {
+                    $imageStorage->delete(
+                        $uploadedResource['public_id'],
+                        $uploadedResource['url']
+                    );
+                } catch (\Throwable $cleanupException) {
+                    report($cleanupException);
+                }
             }
 
             report($exception);
