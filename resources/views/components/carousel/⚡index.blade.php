@@ -339,7 +339,7 @@ new class extends Component
                     <div class="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
 
                         <img
-                            src="{{ asset('storage/' . $slide->desktop_image) }}"
+                            src="{{ $slide->desktop_image_url }}"
                             alt="{{ $slide->title }}"
                             class="aspect-video w-full object-cover"
                             loading="lazy"

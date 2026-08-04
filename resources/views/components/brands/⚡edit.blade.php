@@ -352,7 +352,7 @@ new class extends Component
                         >
                     @elseif ($existingLogo && ! $remove_logo)
                         <img
-                            src="{{ asset('storage/' . $existingLogo) }}"
+                            src="{{ $existingLogo }}"
                             alt="{{ $name }}"
                             class="h-52 w-full object-contain p-4"
                         >

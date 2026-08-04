@@ -395,7 +395,7 @@ new class extends Component
                     >
                 @elseif ($existingImage && ! $remove_image)
                     <img
-                        src="{{ asset('storage/' . $existingImage) }}"
+                        src="{{ $existingImage }}"
                         alt="{{ $name }}"
                         class="h-52 w-full object-cover"
                     >

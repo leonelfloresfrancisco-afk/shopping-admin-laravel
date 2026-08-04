@@ -230,7 +230,7 @@ new class extends Component
                         <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
                             @if ($brand->logo)
                                 <img
-                                    src="{{ asset('storage/' . $brand->logo) }}"
+                                    src="{{ $brand->logo_url }}"
                                     alt="{{ $brand->name }}"
                                     class="h-full w-full object-contain"
                                     loading="lazy"
@@ -362,7 +362,7 @@ new class extends Component
                                     <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
                                         @if ($brand->logo)
                                             <img
-                                                src="{{ asset('storage/' . $brand->logo) }}"
+                                                src="{{ $brand->logo_url }}"
                                                 alt="{{ $brand->name }}"
                                                 class="h-full w-full object-contain"
                                                 loading="lazy"

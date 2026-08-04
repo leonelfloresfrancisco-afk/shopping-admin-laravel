@@ -423,7 +423,7 @@ new class extends Component
                             >
                         @elseif ($existingDesktopImage)
                             <img
-                                src="{{ asset('storage/' . $existingDesktopImage) }}"
+                                src="{{ $existingDesktopImage }}"
                                 alt="{{ $title }}"
                                 class="h-full w-full object-cover"
                             >
@@ -476,7 +476,7 @@ new class extends Component
                             >
                         @elseif ($existingMobileImage && ! $remove_mobile_image)
                             <img
-                                src="{{ asset('storage/' . $existingMobileImage) }}"
+                                src="{{ $existingMobileImage }}"
                                 alt="{{ $title }}"
                                 class="h-full w-full object-cover"
                             >

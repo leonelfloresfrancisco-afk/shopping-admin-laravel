@@ -747,7 +747,7 @@ new class extends Component
                         >
                     @elseif ($existingLogo && ! $remove_logo)
                         <img
-                            src="{{ asset('storage/' . $existingLogo) }}"
+                            src="{{ $existingLogo }}"
                             alt="{{ $trade_name }}"
                             class="h-44 w-full object-contain p-4"
                         >
@@ -811,7 +811,7 @@ new class extends Component
                         >
                     @elseif ($existingFavicon && ! $remove_favicon)
                         <img
-                            src="{{ asset('storage/' . $existingFavicon) }}"
+                            src="{{ $existingFavicon }}"
                             alt="Favicon"
                             class="h-24 w-24 rounded-xl object-contain"
                         >
