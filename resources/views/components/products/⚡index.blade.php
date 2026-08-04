@@ -1,10 +1,12 @@
 <?php
 
+use App\Contracts\ImageStorage;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -121,22 +123,115 @@ new class extends Component
     }
 
     /**
-     * Elimina un producto y su imagen principal.
+     * Elimina un producto y todos sus recursos gráficos.
      */
     public function delete(int $productId): void
     {
-        $product = Product::query()->findOrFail($productId);
+        $product = Product::query()
+            ->with('images')
+            ->findOrFail($productId);
 
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+        /** @var ImageStorage $imageStorage */
+        $imageStorage = app(ImageStorage::class);
+
+        $resources = collect([
+            [
+                'image' => $product->getRawOriginal('image'),
+                'public_id' => $product->image_public_id,
+                'provider' => $product->image_provider,
+            ],
+        ])
+            ->merge(
+                $product->images->map(
+                    fn ($productImage): array => [
+                        'image' => $productImage->getRawOriginal('image'),
+                        'public_id' => $productImage->image_public_id,
+                        'provider' => $productImage->image_provider,
+                    ]
+                )
+            )
+            ->filter(
+                fn (array $resource): bool =>
+                    filled($resource['image'] ?? null)
+            )
+            ->values();
+
+        try {
+            $product->delete();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            $this->messageType = 'error';
+            $this->message =
+                'No se pudo eliminar el producto. Intenta nuevamente.';
+
+            return;
         }
 
-        $product->delete();
+        foreach ($resources as $resource) {
+            $this->deleteStoredResource(
+                imageStorage: $imageStorage,
+                image: $resource['image'] ?? null,
+                publicId: $resource['public_id'] ?? null,
+                provider: $resource['provider'] ?? null,
+            );
+        }
 
         $this->messageType = 'success';
         $this->message = 'El producto fue eliminado correctamente.';
 
         $this->resetPage();
+    }
+
+    /**
+     * Elimina una imagen de Cloudinary o un archivo local antiguo.
+     */
+    private function deleteStoredResource(
+        ImageStorage $imageStorage,
+        ?string $image,
+        ?string $publicId,
+        ?string $provider,
+    ): void {
+        if (! is_string($image) || trim($image) === '') {
+            return;
+        }
+
+        try {
+            if (
+                $provider === 'cloudinary'
+                || filled($publicId)
+                || Str::startsWith(
+                    $image,
+                    [
+                        'http://',
+                        'https://',
+                    ]
+                )
+            ) {
+                $imageStorage->delete(
+                    $publicId,
+                    $image
+                );
+
+                return;
+            }
+
+            $localPath = ltrim(
+                str_replace('\\', '/', $image),
+                '/'
+            );
+
+            if (Str::startsWith($localPath, 'storage/')) {
+                $localPath = Str::after(
+                    $localPath,
+                    'storage/'
+                );
+            }
+
+            Storage::disk('public')->delete($localPath);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**
@@ -876,7 +971,7 @@ new class extends Component
 
                                         @if ($product->brand->logo)
                                             <img
-                                                src="{{ asset('storage/' . $product->brand->logo) }}"
+                                                src="{{ $product->brand->logo_url }}"
                                                 alt="{{ $product->brand->name }}"
                                                 class="h-8 w-8 rounded-lg border border-zinc-200 object-contain p-1 dark:border-zinc-700"
                                                 loading="lazy"
