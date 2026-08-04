@@ -1,5 +1,6 @@
 <?php
 
+use App\Contracts\ImageStorage;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -96,7 +97,7 @@ new class extends Component
 
         $this->is_featured = $product->is_featured;
 
-        $this->existingImage = $product->image;
+        $this->existingImage = $product->image_url;
     }
 
     /**
@@ -445,21 +446,13 @@ new class extends Component
         $validated = $this->validate();
 
         $uploadedMainImage = $validated['image'] ?? null;
-
-        $removeMainImage = (bool) (
-            $validated['remove_image'] ?? false
-        );
-
-        $uploadedGalleryImages = $validated['gallery_images']
-            ?? [];
+        $removeMainImage = (bool) ($validated['remove_image'] ?? false);
+        $uploadedGalleryImages = $validated['gallery_images'] ?? [];
 
         $galleryImagesToDelete = collect(
-            $validated['gallery_images_to_delete']
-            ?? []
+            $validated['gallery_images_to_delete'] ?? []
         )
-            ->map(
-                fn ($imageId): int => (int) $imageId
-            )
+            ->map(fn ($imageId): int => (int) $imageId)
             ->unique()
             ->values()
             ->all();
@@ -472,107 +465,85 @@ new class extends Component
         );
 
         $validated['category_id'] = (int) $validated['category_id'];
-
-        $validated['brand_id'] = filled(
-            $validated['brand_id']
-        )
+        $validated['brand_id'] = filled($validated['brand_id'])
             ? (int) $validated['brand_id']
             : null;
-
-        $validated['sku'] = Str::upper(
-            trim($validated['sku'])
-        );
-
-        $validated['name'] = trim(
-            $validated['name']
-        );
-
-        $validated['slug'] = Str::slug(
-            $validated['slug']
-        );
-
-        $validated['description'] = filled(
-            $validated['description']
-        )
+        $validated['sku'] = Str::upper(trim($validated['sku']));
+        $validated['name'] = trim($validated['name']);
+        $validated['slug'] = Str::slug($validated['slug']);
+        $validated['description'] = filled($validated['description'])
             ? trim($validated['description'])
             : null;
-
         $validated['compare_at_price'] = filled(
             $validated['compare_at_price']
         )
             ? $validated['compare_at_price']
             : null;
 
-        $product = Product::query()
-            ->findOrFail(
-                $this->productId
-            );
-
-        $newStoredFiles = [];
-
-        $filesToDeleteAfterUpdate = [];
-
-        $newGalleryRows = [];
+        $product = Product::query()->findOrFail(
+            $this->productId
+        );
 
         $galleryRecordsToDelete = ProductImage::query()
-            ->where(
-                'product_id',
-                $this->productId
-            )
+            ->where('product_id', $this->productId)
             ->when(
                 $galleryImagesToDelete !== [],
                 fn ($query) => $query->whereIn(
                     'id',
                     $galleryImagesToDelete
                 ),
-                fn ($query) => $query->whereRaw(
-                    '1 = 0'
-                )
+                fn ($query) => $query->whereRaw('1 = 0')
             )
             ->get([
                 'id',
                 'image',
+                'image_public_id',
+                'image_provider',
             ]);
 
-        try {
-            /*
-            |--------------------------------------------------------------------------
-            | Imagen principal
-            |--------------------------------------------------------------------------
-            */
+        /** @var ImageStorage $imageStorage */
+        $imageStorage = app(ImageStorage::class);
 
+        $uploadedResources = [];
+        $resourcesToDeleteAfterUpdate = [];
+        $newGalleryRows = [];
+
+        try {
             if ($uploadedMainImage !== null) {
-                $newMainImagePath = $uploadedMainImage->store(
-                    'products',
-                    'public'
+                $mainImageUpload = $imageStorage->upload(
+                    $uploadedMainImage,
+                    'wasyntek/products/main'
                 );
 
-                $newStoredFiles[] = $newMainImagePath;
+                $uploadedResources[] = $mainImageUpload;
 
-                $validated['image'] = $newMainImagePath;
+                $validated['image'] = $mainImageUpload['url'];
+                $validated['image_public_id'] = $mainImageUpload['public_id'];
+                $validated['image_provider'] = $mainImageUpload['provider'];
 
                 if ($product->image) {
-                    $filesToDeleteAfterUpdate[] = $product->image;
+                    $resourcesToDeleteAfterUpdate[] = [
+                        'image' => $product->getRawOriginal('image'),
+                        'public_id' => $product->image_public_id,
+                        'provider' => $product->image_provider,
+                    ];
                 }
             } elseif ($removeMainImage) {
                 $validated['image'] = null;
+                $validated['image_public_id'] = null;
+                $validated['image_provider'] = null;
 
                 if ($product->image) {
-                    $filesToDeleteAfterUpdate[] = $product->image;
+                    $resourcesToDeleteAfterUpdate[] = [
+                        'image' => $product->getRawOriginal('image'),
+                        'public_id' => $product->image_public_id,
+                        'provider' => $product->image_provider,
+                    ];
                 }
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Nuevas fotografías adicionales
-            |--------------------------------------------------------------------------
-            */
-
             $lastSortOrder = ProductImage::query()
-                ->where(
-                    'product_id',
-                    $this->productId
-                )
+                ->where('product_id', $this->productId)
                 ->when(
                     $galleryImagesToDelete !== [],
                     fn ($query) => $query->whereNotIn(
@@ -586,40 +557,25 @@ new class extends Component
                 ? (int) $lastSortOrder + 1
                 : 0;
 
-            foreach (
-                $uploadedGalleryImages
-                as $index => $galleryImage
-            ) {
-                $galleryImagePath = $galleryImage->store(
-                    'products/gallery',
-                    'public'
+            foreach ($uploadedGalleryImages as $index => $galleryImage) {
+                $galleryUpload = $imageStorage->upload(
+                    $galleryImage,
+                    'wasyntek/products/gallery'
                 );
 
-                $newStoredFiles[] = $galleryImagePath;
+                $uploadedResources[] = $galleryUpload;
 
                 $newGalleryRows[] = [
-                    'image' => $galleryImagePath,
-
+                    'image' => $galleryUpload['url'],
+                    'image_public_id' => $galleryUpload['public_id'],
+                    'image_provider' => $galleryUpload['provider'],
                     'alt_text' => $validated['name']
                         . ' - Vista '
-                        . (
-                            $nextSortOrder
-                            + $index
-                            + 1
-                        ),
-
-                    'sort_order' => $nextSortOrder
-                        + $index,
-
+                        . ($nextSortOrder + $index + 1),
+                    'sort_order' => $nextSortOrder + $index,
                     'is_active' => true,
                 ];
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Actualización transaccional
-            |--------------------------------------------------------------------------
-            */
 
             DB::transaction(
                 function () use (
@@ -628,46 +584,30 @@ new class extends Component
                     $galleryImagesToDelete,
                     $newGalleryRows
                 ): void {
-                    $product->update(
-                        $validated
-                    );
+                    $product->update($validated);
 
-                    if (
-                        $galleryImagesToDelete !== []
-                    ) {
+                    if ($galleryImagesToDelete !== []) {
                         ProductImage::query()
-                            ->where(
-                                'product_id',
-                                $product->id
-                            )
-                            ->whereIn(
-                                'id',
-                                $galleryImagesToDelete
-                            )
+                            ->where('product_id', $product->id)
+                            ->whereIn('id', $galleryImagesToDelete)
                             ->delete();
                     }
 
-                    foreach (
-                        $newGalleryRows
-                        as $galleryRow
-                    ) {
-                        $product
-                            ->images()
-                            ->create(
-                                $galleryRow
-                            );
+                    foreach ($newGalleryRows as $galleryRow) {
+                        $product->images()->create($galleryRow);
                     }
                 }
             );
         } catch (\Throwable $exception) {
-            foreach (
-                array_unique($newStoredFiles)
-                as $newStoredFile
-            ) {
-                Storage::disk('public')
-                    ->delete(
-                        $newStoredFile
+            foreach (array_reverse($uploadedResources) as $resource) {
+                try {
+                    $imageStorage->delete(
+                        $resource['public_id'],
+                        $resource['url']
                     );
+                } catch (\Throwable $cleanupException) {
+                    report($cleanupException);
+                }
             }
 
             report($exception);
@@ -680,35 +620,21 @@ new class extends Component
             return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Eliminación física después de actualizar MySQL
-        |--------------------------------------------------------------------------
-        */
-
-        foreach (
-            $galleryRecordsToDelete
-            as $galleryRecord
-        ) {
-            $filesToDeleteAfterUpdate[] = $galleryRecord->image;
+        foreach ($galleryRecordsToDelete as $galleryRecord) {
+            $resourcesToDeleteAfterUpdate[] = [
+                'image' => $galleryRecord->getRawOriginal('image'),
+                'public_id' => $galleryRecord->image_public_id,
+                'provider' => $galleryRecord->image_provider,
+            ];
         }
 
-        foreach (
-            array_unique(
-                array_filter(
-                    $filesToDeleteAfterUpdate
-                )
-            )
-            as $fileToDelete
-        ) {
-            try {
-                Storage::disk('public')
-                    ->delete(
-                        $fileToDelete
-                    );
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
+        foreach ($resourcesToDeleteAfterUpdate as $resource) {
+            $this->deleteStoredResource(
+                imageStorage: $imageStorage,
+                image: $resource['image'],
+                publicId: $resource['public_id'],
+                provider: $resource['provider'],
+            );
         }
 
         session()->flash(
@@ -720,6 +646,54 @@ new class extends Component
             'products.index',
             navigate: true
         );
+    }
+
+    /**
+     * Elimina una imagen de Cloudinary o una imagen local antigua.
+     */
+    private function deleteStoredResource(
+        ImageStorage $imageStorage,
+        ?string $image,
+        ?string $publicId,
+        ?string $provider,
+    ): void {
+        if (! is_string($image) || trim($image) === '') {
+            return;
+        }
+
+        try {
+            if (
+                $provider === 'cloudinary'
+                || filled($publicId)
+                || Str::startsWith(
+                    $image,
+                    [
+                        'http://',
+                        'https://',
+                    ]
+                )
+            ) {
+                $imageStorage->delete($publicId, $image);
+
+                return;
+            }
+
+            $localPath = ltrim(
+                str_replace('\\', '/', $image),
+                '/'
+            );
+
+            if (Str::startsWith($localPath, 'storage/')) {
+                $localPath = Str::after(
+                    $localPath,
+                    'storage/'
+                );
+            }
+
+            Storage::disk('public')->delete($localPath);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**
@@ -1122,7 +1096,7 @@ new class extends Component
                         >
                     @elseif ($existingImage && ! $remove_image)
                         <img
-                            src="{{ asset('storage/' . $existingImage) }}"
+                            src="{{ $existingImage }}"
                             alt="{{ $name }}"
                             class="h-52 w-full object-contain"
                         >
