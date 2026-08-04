@@ -1178,7 +1178,7 @@ new class extends Component
                                     <div class="flex h-40 items-center justify-center overflow-hidden">
 
                                         <img
-                                            src="{{ asset('storage/' . $galleryImage->image) }}"
+                                            src="{{ $galleryImage->image_url }}"
                                             alt="{{ $galleryImage->alt_text ?: $name }}"
                                             class="h-full w-full object-contain"
                                         >

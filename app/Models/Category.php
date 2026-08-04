@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesPublicAssetUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
+    use ResolvesPublicAssetUrl;
+
     protected $fillable = [
 
         'name',
@@ -39,4 +42,16 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
-}
+
+    /**
+     * URL pública de la imagen de la categoría.
+     */
+    protected function imageUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (): ?string =>
+                $this->resolvePublicAssetUrl(
+                    $this->attributes['image'] ?? null
+                )
+        );
+    }}

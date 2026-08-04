@@ -113,7 +113,7 @@
     $storeName = $companySettings?->trade_name ?: 'Mi Tienda';
 
     $storeLogoUrl = $companySettings?->logo
-        ? asset('storage/' . $companySettings->logo)
+        ? $companySettings->logo_url
         : null;
 
     $logoVersion = $companySettings?->updated_at?->timestamp ?? time();
@@ -477,7 +477,7 @@
 
                                                 @if ($navigationCategory->image)
                                                     <img
-                                                        src="{{ asset('storage/' . $navigationCategory->image) }}"
+                                                        src="{{ $navigationCategory->image_url }}"
                                                         alt="{{ $navigationCategory->name }}"
                                                         class="h-full w-full object-cover"
                                                     >

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesPublicAssetUrl;
 use Illuminate\Database\Eloquent\Model;
 
 class CompanySetting extends Model
 {
+    use ResolvesPublicAssetUrl;
+
     /**
-     * Campos permitidos para asignación masiva.
+     * Campos permitidos para asignaciÃ³n masiva.
      *
      * @var array<int, string>
      */
@@ -40,7 +43,7 @@ class CompanySetting extends Model
     ];
 
     /**
-     * Conversión automática de tipos.
+     * ConversiÃ³n automÃ¡tica de tipos.
      *
      * @return array<string, string>
      */
@@ -54,7 +57,7 @@ class CompanySetting extends Model
     }
 
     /**
-     * Obtiene o crea la configuración principal de la empresa.
+     * Obtiene o crea la configuraciÃ³n principal de la empresa.
      */
     public static function current(): self
     {
@@ -62,7 +65,7 @@ class CompanySetting extends Model
             [],
             [
                 'trade_name' => config('app.name', 'Shopping Admin'),
-                'country' => 'Perú',
+                'country' => 'PerÃº',
                 'currency_code' => 'PEN',
                 'timezone' => 'America/Lima',
                 'tax_rate' => 0,
@@ -72,4 +75,29 @@ class CompanySetting extends Model
             ]
         );
     }
-}
+
+    /**
+     * URL pública del logotipo empresarial.
+     */
+    protected function logoUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (): ?string =>
+                $this->resolvePublicAssetUrl(
+                    $this->attributes['logo'] ?? null
+                )
+        );
+    }
+
+    /**
+     * URL pública del favicon.
+     */
+    protected function faviconUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (): ?string =>
+                $this->resolvePublicAssetUrl(
+                    $this->attributes['favicon'] ?? null
+                )
+        );
+    }}
